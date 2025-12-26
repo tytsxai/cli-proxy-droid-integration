@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-blue)]()
 
-[English](README.md) | **中文** | [한국어](README_ko.md)
+[English](README.md) | **中文**
 
 ---
 
@@ -178,8 +178,7 @@ AI 会理解项目结构并帮你排查。
 │   ├── cli-proxy-api             # 代理服务二进制
 │   └── config.yaml.example       # 配置模板
 ├── README.md                     # 英文文档
-├── README_zh-CN.md               # 中文文档
-└── README_ko.md                  # 韩文文档
+└── README_zh-CN.md               # 中文文档
 ```
 
 ---

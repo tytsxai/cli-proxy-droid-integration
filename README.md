@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-blue)]()
 
-**English** | [中文](README_zh-CN.md) | [한국어](README_ko.md)
+**English** | [中文](README_zh-CN.md)
 
 ---
 
@@ -204,8 +204,7 @@ The AI will understand the project structure and help you troubleshoot.
 │   ├── cli-proxy-api             # Proxy server binary
 │   └── config.yaml.example       # Configuration template
 ├── README.md                     # English documentation
-├── README_zh-CN.md               # Chinese documentation
-└── README_ko.md                  # Korean documentation
+└── README_zh-CN.md               # Chinese documentation
 ```
 
 ### Key Configuration Files
