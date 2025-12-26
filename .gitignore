@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+
+# Logs
+*.log
+CLIProxyAPI/logs/
+CLIProxyAPI/proxy.log
+
+# Credentials (sensitive)
+codex-yunyi.json
+
+# Backups
+*.bak
+*.bak.*
+
+# IDE
+.idea/
+.vscode/
+*.swp
