@@ -1,119 +1,204 @@
 # CLI Proxy API 集成工具 - Factory CLI (Droid)
 
-> 通过本地代理服务器，让 Factory CLI (Droid) 使用第三方 AI 模型（如 GPT-5.2）
+> 通过本地代理服务器，让 Factory CLI (Droid) 使用第三方 AI 模型
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-blue)]()
 
-[English](README.md) | **中文** | [日本語](README_ja.md)
+[English](README.md) | **中文** | [한국어](README_ko.md)
 
-## 概述
+---
 
-本工具包让 Factory CLI (Droid) 能够通过本地代理连接第三方 AI 模型提供商。如果你有第三方提供商的 API 凭证，本工具可以帮助你：
+## 这是什么？
+
+本工具包帮助你将 **Factory CLI (Droid)** 连接到第三方 AI 模型提供商。功能包括：
 
 1. **自动检测凭证** - 从多个来源自动读取
 2. **配置自定义模型** - 在 Factory CLI 中使用
-3. **运行本地代理** - 稳定的 API 转发服务
+3. **运行本地代理** - 提供 OpenAI 兼容的 API 端点
 
-## 快速开始
+### 架构图
 
-### 前置条件
+```
+┌─────────────────┐     ┌─────────────────────┐     ┌──────────────────┐
+│  Factory CLI    │────▶│  本地代理           │────▶│  第三方 AI       │
+│  (Droid)        │     │  (localhost:8317)   │     │  提供商          │
+└─────────────────┘     └─────────────────────┘     └──────────────────┘
+```
 
-- 已安装 Factory CLI (Droid)
-- 第三方 API 凭证（存储在 `~/.codex/config.toml` 或 `~/.codex/auth.json`）
-- macOS 或 Linux 系统
+---
 
-### 安装
+## 前置条件
+
+开始之前，请确保你有：
+
+- [ ] 已安装 **Factory CLI (Droid)**
+- [ ] 第三方提供商的 **API 凭证**
+- [ ] **macOS 或 Linux** 操作系统
+- [ ] 基本的终端操作知识
+
+---
+
+## 安装步骤（详细）
+
+### 步骤 1：克隆仓库
 
 ```bash
+cd ~/Desktop
 git clone https://github.com/tytsxai/cli-proxy-droid-integration.git
 cd cli-proxy-droid-integration
+```
+
+### 步骤 2：创建配置文件
+
+```bash
 cp CLIProxyAPI/config.yaml.example CLIProxyAPI/config.yaml
-# 编辑 config.yaml 填入你的 API 凭证
+```
+
+### 步骤 3：编辑配置文件
+
+用编辑器打开 `CLIProxyAPI/config.yaml`：
+
+```bash
+nano CLIProxyAPI/config.yaml
+# 或使用: vim, code 等编辑器
+```
+
+找到 `codex-api-key` 部分并修改：
+
+```yaml
+codex-api-key:
+  - api-key: "你的实际API密钥"
+    prefix: "provider"
+    base-url: "https://你的API端点地址/api"
+```
+
+### 步骤 4：运行配置脚本
+
+```bash
+chmod +x setup.sh
 ./setup.sh
 ```
 
-### 使用方法
+脚本会自动：
+- 同步你的凭证
+- 配置 Factory CLI 自定义模型
+- 在端口 8317 启动本地代理
 
-配置完成后，启动 Droid：
+### 步骤 5：验证安装
+
+```bash
+./verify-integration.sh
+```
+
+看到绿色对勾表示配置成功。
+
+---
+
+## 使用方法
+
+### 启动 Droid
 
 ```bash
 droid
 ```
 
-然后选择自定义模型：
+进入后：
 1. 输入 `/model` 查看可用模型
-2. 选择 `gpt-5.2` 或其他已配置的模型
+2. 选择自定义模型（如 `gpt-5.2`）
 3. 开始对话！
 
-## 工作原理
+### 日常命令
 
-```
-┌─────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│  Droid CLI  │────▶│  本地代理        │────▶│  第三方 AI      │
-│             │     │  (端口 8317)     │     │  提供商         │
-└─────────────┘     └──────────────────┘     └─────────────────┘
-```
+```bash
+# 启动代理（如未运行）
+./setup.sh
 
-本地代理的功能：
-- 自动处理身份验证
-- 提供 OpenAI 兼容的 API 端点
-- 管理请求重试和错误处理
+# 检查状态
+./verify-integration.sh
 
-## 项目结构
+# 查看日志
+tail -f CLIProxyAPI/proxy.log
 
-```
-.
-├── setup.sh                 # 一键配置脚本
-├── sync-credentials.sh      # 凭证同步脚本
-├── verify-integration.sh    # 配置验证脚本
-├── CLIProxyAPI/
-│   ├── cli-proxy-api        # 代理服务二进制文件
-│   └── config.yaml.example  # 配置模板
-└── README.md
+# 停止代理
+pkill -f cli-proxy-api
 ```
 
-## 配置说明
+---
 
-### 凭证来源（优先级顺序）
+## 常见问题排查
 
-1. 环境变量：`CODEX_API_KEY` 或 `OPENAI_API_KEY`
-2. `~/.codex/config.toml` → `experimental_bearer_token`
-3. `~/.codex/auth.json` → `OPENAI_API_KEY`
+### 问题：找不到令牌
 
-### 关键配置文件
+**原因：** 脚本无法找到 API 凭证
 
-| 文件 | 用途 |
-|------|------|
-| `~/.factory/config.json` | Droid 自定义模型设置 |
-| `~/.cli-proxy-api/codex-yunyi.json` | 代理认证令牌 |
-| `CLIProxyAPI/config.yaml` | 代理服务配置 |
-
-## 故障排除
-
-### 找不到令牌
-
-确保凭证文件存在：
-
+**解决方法：**
 ```bash
 ls -la ~/.codex/
 cat ~/.codex/config.toml
 ```
 
-### 端口 8317 被占用
+### 问题：端口 8317 被占用
 
+**解决方法：**
 ```bash
 lsof -i :8317
 kill <PID>
 ./setup.sh
 ```
 
-### 验证配置
+### 问题：自定义模型不显示
 
+**解决方法：**
 ```bash
-./verify-integration.sh
+cat ~/.factory/config.json
+./setup.sh
 ```
+
+### 遇到问题？让 AI 帮你！
+
+如果遇到上述未涵盖的问题：
+
+1. 复制本 README 文件内容
+2. 发送给 ChatGPT、Claude 或其他 AI 助手
+3. 描述你的问题
+
+AI 会理解项目结构并帮你排查。
+
+---
+
+## 项目结构
+
+```
+.
+├── setup.sh                      # 一键配置脚本
+├── sync-credentials.sh           # 凭证同步脚本
+├── verify-integration.sh         # 配置验证脚本
+├── CLIProxyAPI/
+│   ├── cli-proxy-api             # 代理服务二进制
+│   └── config.yaml.example       # 配置模板
+├── README.md                     # 英文文档
+├── README_zh-CN.md               # 中文文档
+└── README_ko.md                  # 韩文文档
+```
+
+---
+
+## 致谢
+
+本项目使用了以下开源工具：
+
+- **[CLIProxyAPI](https://github.com/anthropics/cli-proxy-api)** - 核心代理服务组件
+- **[Factory CLI (Droid)](https://github.com/openai/codex)** - 本项目集成的 CLI 工具
+
+感谢所有贡献者和开源社区。
+
+---
+
+## 贡献
+
+欢迎贡献！请阅读 [CONTRIBUTING.md](CONTRIBUTING.md) 了解指南。
 
 ## 许可证
 
-MIT License - 详见 [LICENSE](LICENSE) 文件
+本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件。
