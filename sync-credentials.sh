@@ -50,16 +50,50 @@ fi
 # 来源 2: ~/.codex/config.toml
 if [ -z "$TOKEN" ] && [ -f "$CODEX_CONFIG" ]; then
     log_info "检查 $CODEX_CONFIG..."
-    # 解析 TOML 中的 experimental_bearer_token (使用 cut 和 tr 确保正确提取)
-    TOML_TOKEN=$(grep -E "^experimental_bearer_token\s*=" "$CODEX_CONFIG" 2>/dev/null | cut -d'=' -f2 | tr -d ' "' | head -1)
+    # 解析 TOML 中的 experimental_bearer_token
+    TOML_TOKEN=""
+    TOML_BASE_URL=""
+    if command -v python3 &> /dev/null; then
+        PY_OUT=$(python3 - "$CODEX_CONFIG" <<'PY'
+import sys
+
+path = sys.argv[1]
+
+try:
+    import tomllib  # py3.11+
+except Exception:  # pragma: no cover
+    tomllib = None
+
+token = ""
+base_url = ""
+
+if tomllib is not None:
+    try:
+        with open(path, "rb") as f:
+            data = tomllib.load(f)
+        token = data.get("experimental_bearer_token", "") or ""
+        base_url = (
+            (data.get("model_providers") or {}).get("yunyi") or {}
+        ).get("base_url", "") or ""
+    except Exception:
+        pass
+
+print(f"{token}\t{base_url}")
+PY
+)
+        TOML_TOKEN="${PY_OUT%%$'\t'*}"
+        TOML_BASE_URL="${PY_OUT#*$'\t'}"
+        [ "$TOML_BASE_URL" = "$PY_OUT" ] && TOML_BASE_URL=""
+    else
+        # 备用：使用 grep/sed
+        TOML_TOKEN=$(grep -E "^experimental_bearer_token\s*=" "$CODEX_CONFIG" 2>/dev/null | sed 's/.*=\s*"\{0,1\}\([^"#]*\)"\{0,1\}.*/\1/' | tr -d '"' | head -1)
+        TOML_BASE_URL=$(awk '/\[model_providers.yunyi\]/,/^\[/' "$CODEX_CONFIG" 2>/dev/null | grep -E "^base_url\s*=" | sed 's/base_url\s*=\s*"\{0,1\}\([^"]*\)"\{0,1\}/\1/' | tr -d '"' | head -1)
+    fi
     if [ -n "$TOML_TOKEN" ]; then
         TOKEN="$TOML_TOKEN"
         TOKEN_SOURCE="$CODEX_CONFIG (experimental_bearer_token)"
         log_success "从 config.toml 读取到 token"
     fi
-    
-    # 同时提取 base_url（如果存在，在 [model_providers.yunyi] 节中）
-    TOML_BASE_URL=$(awk '/\[model_providers.yunyi\]/,/^\[/' "$CODEX_CONFIG" 2>/dev/null | grep -E "^base_url\s*=" | sed 's/base_url\s*=\s*"\{0,1\}\([^"]*\)"\{0,1\}/\1/' | tr -d '"' | head -1)
     if [ -n "$TOML_BASE_URL" ]; then
         BASE_URL="$TOML_BASE_URL"
         log_info "使用 base_url: $BASE_URL"
@@ -108,7 +142,29 @@ echo ""
 # 生成 CLIProxyAPI token 文件
 log_info "写入 $CLI_PROXY_TOKEN..."
 
-cat > "$CLI_PROXY_TOKEN" << EOF
+if command -v python3 &> /dev/null; then
+    python3 - "$CLI_PROXY_TOKEN" "$TOKEN" "$BASE_URL" <<'PY'
+import json
+import sys
+
+out_path, token, base_url = sys.argv[1], sys.argv[2], sys.argv[3]
+
+payload = {
+    "access_token": token,
+    "refresh_token": "",
+    "expires_at": 9999999999,
+    "token_type": "Bearer",
+    "email": "yunyi@third-party.com",
+    "provider": "yunyi",
+    "base_url": base_url,
+}
+
+with open(out_path, "w", encoding="utf-8") as f:
+    json.dump(payload, f, ensure_ascii=False, indent=4)
+    f.write("\n")
+PY
+else
+    cat > "$CLI_PROXY_TOKEN" << EOF
 {
     "access_token": "$TOKEN",
     "refresh_token": "",
@@ -119,6 +175,7 @@ cat > "$CLI_PROXY_TOKEN" << EOF
     "base_url": "$BASE_URL"
 }
 EOF
+fi
 
 # 设置安全权限
 chmod 600 "$CLI_PROXY_TOKEN"
