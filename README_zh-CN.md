@@ -274,7 +274,9 @@ A: 安全。密钥存储在本地 `~/.cli-proxy-api/`，权限为 600，不会�
 │   ├── cli-proxy-api             # 代理服务二进制
 │   └── config.yaml.example       # 配置模板
 ├── README.md                     # 英文文档
-└── README_zh-CN.md               # 中文文档
+├── README_zh-CN.md               # 中文文档
+├── CONTRIBUTING.md               # 贡献指南
+└── LICENSE                       # MIT 许可证
 ```
 
 ---

@@ -314,7 +314,9 @@ A: This proxy is designed for OpenAI-compatible APIs. For Anthropic, you'd need 
 │   ├── cli-proxy-api             # Proxy server binary
 │   └── config.yaml.example       # Configuration template
 ├── README.md                     # English documentation
-└── README_zh-CN.md               # Chinese documentation
+├── README_zh-CN.md               # Chinese documentation
+├── CONTRIBUTING.md               # Contribution guidelines
+└── LICENSE                       # MIT License
 ```
 
 ### Key Configuration Files
