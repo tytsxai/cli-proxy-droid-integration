@@ -15,9 +15,9 @@ auth:
   providers: []
 generative-language-api-key: []
 
-# Yunyi 第三方 Codex API 配置
-# 注意：base-url 设置为 API 的根地址，代理会自动拼接 /v1/responses
+# Third-party API Configuration
+# Note: base-url is the API root, proxy will append /v1/responses automatically
 codex-api-key:
   - api-key: "YOUR_API_KEY_HERE"
-    prefix: "yunyi"
+    prefix: "provider"
     base-url: "https://your-provider.example.com/api"

@@ -5,6 +5,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-blue)]()
 
+**English** | [中文](README_zh-CN.md) | [日本語](README_ja.md)
+
 ## Overview
 
 This toolkit enables Factory CLI (Droid) to connect to third-party AI model providers through a local proxy. If you have API credentials from a third-party provider, this tool helps you:
@@ -26,6 +28,8 @@ This toolkit enables Factory CLI (Droid) to connect to third-party AI model prov
 ```bash
 git clone https://github.com/tytsxai/cli-proxy-droid-integration.git
 cd cli-proxy-droid-integration
+cp CLIProxyAPI/config.yaml.example CLIProxyAPI/config.yaml
+# Edit config.yaml with your API credentials
 ./setup.sh
 ```
 
@@ -70,7 +74,7 @@ The local proxy:
 ├── verify-integration.sh    # Configuration verification
 ├── CLIProxyAPI/
 │   ├── cli-proxy-api        # Proxy server binary
-│   └── config.yaml          # Proxy configuration
+│   └── config.yaml.example  # Configuration template
 └── README.md
 ```
 

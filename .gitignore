@@ -9,6 +9,9 @@ CLIProxyAPI/proxy.log
 # Credentials (sensitive)
 codex-yunyi.json
 
+# Real config (use config.yaml.example as template)
+CLIProxyAPI/config.yaml
+
 # Backups
 *.bak
 *.bak.*
