@@ -75,7 +75,8 @@ echo "   1️⃣  检查 CLIProxyAPI 二进制文件"
 echo "   2️⃣  同步 yunyi 第三方凭证"
 echo "   3️⃣  配置 Droid 自定义模型"
 echo "   4️⃣  停止现有代理进程"
-echo "   5️⃣  启动 CLIProxyAPI 代理服务"
+echo "   5️⃣  启动 Cursor 兼容代理 (8317)"
+echo "   6️⃣  启动 CLIProxyAPI 上游服务 (8318)"
 echo ""
 echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
@@ -109,13 +110,13 @@ cat > "$FACTORY_CONFIG" << 'EOF'
     "custom_models": [
         {
             "model": "gpt-5.2",
-            "base_url": "http://localhost:8317/v1",
+            "base_url": "http://localtest.me:8317/v1",
             "api_key": "dummy-not-used",
             "provider": "openai"
         },
         {
             "model": "gpt-5.2-codex",
-            "base_url": "http://localhost:8317/v1",
+            "base_url": "http://localtest.me:8317/v1",
             "api_key": "dummy-not-used",
             "provider": "openai"
         }
@@ -125,7 +126,16 @@ EOF
 log_success "Droid 配置已写入: $FACTORY_CONFIG"
 
 # 步骤 4: 停止现有代理
-log_info "步骤 4/5: 检查并停止现有代理..."
+log_info "步骤 4/6: 检查并停止现有代理..."
+if pgrep -f "cursor-compat-proxy.js" > /dev/null; then
+    log_warn "发现运行中的 Cursor 兼容代理，准备停止"
+    pkill -f "cursor-compat-proxy.js" || true
+    sleep 1
+    log_success "已停止 Cursor 兼容代理"
+else
+    log_info "没有运行中的 Cursor 兼容代理"
+fi
+
 if pgrep -f "cli-proxy-api" > /dev/null; then
     log_warn "发现运行中的 CLIProxyAPI，准备停止"
     pkill -f "cli-proxy-api" || true
@@ -135,15 +145,31 @@ else
     log_info "没有运行中的 CLIProxyAPI 进程"
 fi
 
-# 步骤 5: 启动代理
-log_info "步骤 5/5: 启动 CLIProxyAPI..."
+# 步骤 5: 启动 Cursor 兼容代理（外部端口 8317）
+log_info "步骤 5/6: 启动 Cursor 兼容代理 (端口 8317)..."
+cd "$SCRIPT_DIR"
+FORCE_MODEL="${CURSOR_COMPAT_FORCE_MODEL:-gpt-5.2}"
+FORCE_KEY="${CURSOR_COMPAT_FORCE_KEY:-cursor-only}"
+MODEL_MAP="${CURSOR_COMPAT_MODEL_MAP:-}"
+log_info "启动命令: CURSOR_COMPAT_FORCE_MODEL=$FORCE_MODEL CURSOR_COMPAT_FORCE_KEY=$FORCE_KEY CURSOR_COMPAT_MODEL_MAP=$MODEL_MAP node ./cursor-compat-proxy.js"
+nohup env CURSOR_COMPAT_FORCE_MODEL="$FORCE_MODEL" CURSOR_COMPAT_FORCE_KEY="$FORCE_KEY" CURSOR_COMPAT_MODEL_MAP="$MODEL_MAP" node ./cursor-compat-proxy.js > "$CLI_PROXY_DIR/cursor-compat-proxy.log" 2>&1 &
+sleep 1
+
+if lsof -i :8317 > /dev/null 2>&1; then
+    log_success "Cursor 兼容代理启动成功 (端口 8317)"
+else
+    die "Cursor 兼容代理启动失败 (查看日志: tail -50 $CLI_PROXY_DIR/cursor-compat-proxy.log)"
+fi
+
+# 步骤 6: 启动 CLIProxyAPI 上游服务（内部端口 8318）
+log_info "步骤 6/6: 启动 CLIProxyAPI 上游服务 (端口 8318)..."
 cd "$CLI_PROXY_DIR"
 log_info "启动命令: ./cli-proxy-api --config config.yaml"
 nohup ./cli-proxy-api --config config.yaml > proxy.log 2>&1 &
 sleep 2
 
-if pgrep -f "cli-proxy-api" > /dev/null; then
-    log_success "CLIProxyAPI 启动成功 (端口 8317)"
+if lsof -i :8318 > /dev/null 2>&1; then
+    log_success "CLIProxyAPI 启动成功 (端口 8318)"
 else
     die "CLIProxyAPI 启动失败 (查看日志: tail -50 $CLI_PROXY_DIR/proxy.log)"
 fi
@@ -156,8 +182,8 @@ echo ""
 
 # API 配置详情
 echo -e "${CYAN}🔧 API 配置详情：${NC}"
-echo "   ├─ 代理地址:      http://localhost:8317"
-echo "   ├─ API 端点:      http://localhost:8317/v1/responses"
+echo "   ├─ 代理地址:      http://localtest.me:8317"
+echo "   ├─ API 端点:      http://localtest.me:8317/v1/responses"
 echo "   ├─ API 格式:      OpenAI 兼容格式"
 echo "   └─ 认证方式:      无需额外认证（已内置 yunyi token）"
 echo ""
@@ -174,11 +200,11 @@ echo -e "${CYAN}🔌 其他应用集成：${NC}"
 echo "   如需在其他工具中使用此 API，配置如下："
 echo ""
 echo "   # 环境变量方式"
-echo "   export OPENAI_API_BASE=http://localhost:8317/v1"
+echo "   export OPENAI_API_BASE=http://localtest.me:8317/v1"
 echo "   export OPENAI_API_KEY=dummy-not-used"
 echo ""
 echo "   # cURL 测试"
-echo "   curl http://localhost:8317/v1/models"
+echo "   curl http://localtest.me:8317/v1/models"
 echo ""
 
 # 配置文件位置
@@ -186,7 +212,8 @@ echo -e "${CYAN}📁 关键配置文件：${NC}"
 echo "   ├─ Droid 模型配置:     ~/.factory/config.json"
 echo "   ├─ 代理配置:           $CONFIG_FILE"
 echo "   ├─ yunyi 凭证:         ~/.cli-proxy-api/codex-yunyi.json"
-echo "   └─ 代理日志:           $CLI_PROXY_DIR/proxy.log"
+echo "   ├─ 代理日志(上游):     $CLI_PROXY_DIR/proxy.log"
+echo "   └─ 代理日志(Cursor):   $CLI_PROXY_DIR/cursor-compat-proxy.log"
 echo ""
 
 # 常用命令
@@ -200,4 +227,3 @@ echo ""
 echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 log_tip "💡 提示：代理服务需保持运行，关闭终端后需重新启动"
 log_tip "📖 更多文档：查看 README.md 获取详细指南"
-

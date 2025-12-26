@@ -94,7 +94,7 @@ if pgrep -f "cli-proxy-api" > /dev/null; then
     log_info "PID: $PID"
 else
     log_warn "CLIProxyAPI 未运行"
-    log_info "运行 ./start-proxy.sh 或 ./setup.sh 启动"
+    log_info "运行 ./setup.sh 启动（或参考 setup.sh 中的启动命令）"
 fi
 
 # 检查端口
@@ -103,6 +103,12 @@ if command -v lsof &> /dev/null; then
         log_pass "端口 8317 已监听"
     else
         log_warn "端口 8317 未监听"
+    fi
+
+    if lsof -i :8318 > /dev/null 2>&1; then
+        log_pass "端口 8318 已监听 (CLIProxyAPI 上游)"
+    else
+        log_warn "端口 8318 未监听 (CLIProxyAPI 上游)"
     fi
 fi
 
@@ -163,7 +169,7 @@ if [ $FAILURES -eq 0 ]; then
     echo -e "${GREEN}✅ 所有关键检查通过！${NC}"
     echo ""
     echo "下一步："
-    echo "  1. 确保 CLIProxyAPI 正在运行: ./start-proxy.sh"
+    echo "  1. 确保代理正在运行: ./setup.sh"
     echo "  2. 启动 Droid: droid"
     echo "  3. 选择自定义模型: /model → gpt-5.2"
 else
