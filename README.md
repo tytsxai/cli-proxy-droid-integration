@@ -1,6 +1,6 @@
-# CLI Proxy API Integration for Factory CLI (Droid)
+# Codex CLI Auth Proxy for Droid & Other Tools
 
-> Use third-party AI models with Factory CLI (Droid) through a local OpenAI-compatible proxy server.
+> **Reuse your Codex CLI authentication** to power Droid (Factory CLI) and any OpenAI-compatible application through a local proxy server.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-blue)]()
@@ -9,21 +9,63 @@
 
 ---
 
-## What is This?
+## Why This Project?
 
-This toolkit helps you connect **Factory CLI (Droid)** to third-party AI model providers. If you have API credentials from a third-party provider, this tool:
+**The Problem:** You have a valid Codex CLI subscription/authentication, but you want to use it with other tools like Droid (Factory CLI), or build your own applications.
 
-1. **Auto-detects your credentials** from multiple sources
-2. **Configures custom models** in Factory CLI
-3. **Runs a local proxy** that provides OpenAI-compatible API endpoints
+**The Solution:** This proxy server extracts your Codex CLI credentials and exposes them as a standard **OpenAI-compatible API** on `localhost:8317`.
 
 ### Architecture
 
 ```
 ┌─────────────────┐     ┌─────────────────────┐     ┌──────────────────┐
-│  Factory CLI    │────▶│  Local Proxy        │────▶│  Third-party     │
-│  (Droid)        │     │  (localhost:8317)   │     │  AI Provider     │
+│  Droid / Apps   │────▶│  Local Proxy        │────▶│  AI Provider     │
+│                 │     │  (localhost:8317)   │     │  (via Codex)     │
 └─────────────────┘     └─────────────────────┘     └──────────────────┘
+```
+
+---
+
+## Use Cases
+
+### 1. Use Codex Auth with Droid (Primary)
+
+If you have Codex CLI credentials and want to use them in Droid:
+
+```
+Codex CLI Auth  →  This Proxy  →  Droid (Factory CLI)
+```
+
+### 2. Build Your Own Applications (Advanced)
+
+The proxy exposes a standard OpenAI-compatible API. You can use it with:
+
+- **Python applications** using `openai` library
+- **Node.js applications** using OpenAI SDK
+- **Any tool** that supports custom OpenAI endpoints
+- **curl** for direct API calls
+
+```bash
+# Example: Use with any OpenAI-compatible client
+export OPENAI_API_BASE=http://localhost:8317/v1
+export OPENAI_API_KEY=dummy
+
+# Now any OpenAI client will use your Codex credentials
+python your_app.py
+```
+
+### 3. API Gateway for Multiple Tools
+
+Run the proxy once, use it everywhere:
+
+```
+                    ┌─── Droid
+                    │
+localhost:8317 ─────┼─── Your Python Script
+                    │
+                    ├─── VS Code Extension
+                    │
+                    └─── Any OpenAI Client
 ```
 
 ---

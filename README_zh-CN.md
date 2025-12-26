@@ -1,6 +1,6 @@
-# CLI Proxy API 集成工具 - Factory CLI (Droid)
+# Codex CLI 认证代理 - 用于 Droid 及其他工具
 
-> 通过本地代理服务器，让 Factory CLI (Droid) 使用第三方 AI 模型
+> **复用你的 Codex CLI 认证**，让 Droid (Factory CLI) 和任何 OpenAI 兼容应用都能使用。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-blue)]()
@@ -9,21 +9,57 @@
 
 ---
 
-## 这是什么？
+## 为什么需要这个项目？
 
-本工具包帮助你将 **Factory CLI (Droid)** 连接到第三方 AI 模型提供商。功能包括：
+**问题：** 你有 Codex CLI 的订阅/认证，但想在其他工具（如 Droid）中使用，或者想开发自己的应用。
 
-1. **自动检测凭证** - 从多个来源自动读取
-2. **配置自定义模型** - 在 Factory CLI 中使用
-3. **运行本地代理** - 提供 OpenAI 兼容的 API 端点
+**解决方案：** 本代理服务器提取你的 Codex CLI 凭证，并在 `localhost:8317` 暴露为标准的 **OpenAI 兼容 API**。
 
 ### 架构图
 
 ```
 ┌─────────────────┐     ┌─────────────────────┐     ┌──────────────────┐
-│  Factory CLI    │────▶│  本地代理           │────▶│  第三方 AI       │
-│  (Droid)        │     │  (localhost:8317)   │     │  提供商          │
+│  Droid / 应用   │────▶│  本地代理           │────▶│  AI 提供商       │
+│                 │     │  (localhost:8317)   │     │  (通过 Codex)    │
 └─────────────────┘     └─────────────────────┘     └──────────────────┘
+```
+
+---
+
+## 使用场景
+
+### 1. 在 Droid 中使用 Codex 认证（主要用途）
+
+```
+Codex CLI 认证  →  本代理  →  Droid (Factory CLI)
+```
+
+### 2. 开发自己的应用（进阶用途）
+
+代理暴露标准 OpenAI 兼容 API，可用于：
+
+- **Python 应用** - 使用 `openai` 库
+- **Node.js 应用** - 使用 OpenAI SDK
+- **任何支持自定义 OpenAI 端点的工具**
+
+```bash
+# 示例：配置任何 OpenAI 兼容客户端
+export OPENAI_API_BASE=http://localhost:8317/v1
+export OPENAI_API_KEY=dummy
+
+python your_app.py
+```
+
+### 3. 多工具共享 API 网关
+
+启动一次代理，多处使用：
+
+```
+                    ┌─── Droid
+                    │
+localhost:8317 ─────┼─── Python 脚本
+                    │
+                    └─── 其他 OpenAI 客户端
 ```
 
 ---
