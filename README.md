@@ -9,6 +9,19 @@
 
 ---
 
+## Quick Start (TL;DR)
+
+```bash
+git clone https://github.com/tytsxai/cli-proxy-droid-integration.git
+cd cli-proxy-droid-integration
+cp CLIProxyAPI/config.yaml.example CLIProxyAPI/config.yaml
+# Edit config.yaml with your API credentials
+./setup.sh
+droid  # Then type /model to select custom model
+```
+
+---
+
 ## Why This Project?
 
 **The Problem:** You have a valid Codex CLI subscription/authentication, but you want to use it with other tools like Droid (Factory CLI), or build your own applications.
@@ -78,6 +91,16 @@ Before you begin, ensure you have:
 - [ ] **API credentials** from your third-party provider
 - [ ] **macOS or Linux** operating system
 - [ ] **Basic terminal knowledge**
+
+### Where Are My Credentials?
+
+The proxy auto-detects credentials from these locations (in order):
+
+| Priority | Location | Key |
+|----------|----------|-----|
+| 1 | Environment | `CODEX_API_KEY` or `OPENAI_API_KEY` |
+| 2 | `~/.codex/config.toml` | `experimental_bearer_token` |
+| 3 | `~/.codex/auth.json` | `OPENAI_API_KEY` |
 
 ---
 
@@ -166,6 +189,35 @@ tail -f CLIProxyAPI/proxy.log
 pkill -f cli-proxy-api
 ```
 
+### Use as OpenAI-Compatible API
+
+```bash
+# Test the API
+curl http://localhost:8317/v1/models
+
+# Chat completion
+curl http://localhost:8317/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"model": "gpt-5.2", "messages": [{"role": "user", "content": "Hello"}]}'
+```
+
+### Python Example
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="http://localhost:8317/v1",
+    api_key="dummy"
+)
+
+response = client.chat.completions.create(
+    model="gpt-5.2",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+print(response.choices[0].message.content)
+```
+
 ---
 
 ## Troubleshooting
@@ -232,6 +284,22 @@ If you encounter issues not covered above, you can ask any AI assistant for help
 3. Describe your problem
 
 The AI will understand the project structure and help you troubleshoot.
+
+---
+
+## FAQ
+
+**Q: Do I need to keep the proxy running?**
+A: Yes. The proxy must be running for Droid or other apps to connect. Run `./setup.sh` to start it.
+
+**Q: Can I change the port?**
+A: Yes. Edit `CLIProxyAPI/config.yaml` and change `port: 8317` to your preferred port.
+
+**Q: Is my API key secure?**
+A: Yes. The key is stored locally in `~/.cli-proxy-api/` with restricted permissions (600). It never leaves your machine.
+
+**Q: Can I use this with Claude/Anthropic API?**
+A: This proxy is designed for OpenAI-compatible APIs. For Anthropic, you'd need a different setup.
 
 ---
 

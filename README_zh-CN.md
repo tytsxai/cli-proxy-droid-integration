@@ -9,6 +9,19 @@
 
 ---
 
+## 快速开始
+
+```bash
+git clone https://github.com/tytsxai/cli-proxy-droid-integration.git
+cd cli-proxy-droid-integration
+cp CLIProxyAPI/config.yaml.example CLIProxyAPI/config.yaml
+# 编辑 config.yaml 填入你的 API 凭证
+./setup.sh
+droid  # 输入 /model 选择自定义模型
+```
+
+---
+
 ## 为什么需要这个项目？
 
 **问题：** 你有 Codex CLI 的订阅/认证，但想在其他工具（如 Droid）中使用，或者想开发自己的应用。
@@ -72,6 +85,16 @@ localhost:8317 ─────┼─── Python 脚本
 - [ ] 第三方提供商的 **API 凭证**
 - [ ] **macOS 或 Linux** 操作系统
 - [ ] 基本的终端操作知识
+
+### 凭证在哪里？
+
+代理会自动从以下位置检测凭证（按优先级）：
+
+| 优先级 | 位置 | 键名 |
+|--------|------|------|
+| 1 | 环境变量 | `CODEX_API_KEY` 或 `OPENAI_API_KEY` |
+| 2 | `~/.codex/config.toml` | `experimental_bearer_token` |
+| 3 | `~/.codex/auth.json` | `OPENAI_API_KEY` |
 
 ---
 
@@ -160,6 +183,30 @@ tail -f CLIProxyAPI/proxy.log
 pkill -f cli-proxy-api
 ```
 
+### 作为 OpenAI 兼容 API 使用
+
+```bash
+# 测试 API
+curl http://localhost:8317/v1/models
+```
+
+### Python 示例
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="http://localhost:8317/v1",
+    api_key="dummy"
+)
+
+response = client.chat.completions.create(
+    model="gpt-5.2",
+    messages=[{"role": "user", "content": "你好！"}]
+)
+print(response.choices[0].message.content)
+```
+
 ---
 
 ## 常见问题排查
@@ -200,6 +247,19 @@ cat ~/.factory/config.json
 3. 描述你的问题
 
 AI 会理解项目结构并帮你排查。
+
+---
+
+## 常见问题
+
+**Q: 代理需要一直运行吗？**
+A: 是的。Droid 或其他应用需要代理运行才能连接。运行 `./setup.sh` 启动。
+
+**Q: 可以修改端口吗？**
+A: 可以。编辑 `CLIProxyAPI/config.yaml`，修改 `port: 8317`。
+
+**Q: API 密钥安全吗？**
+A: 安全。密钥存储在本地 `~/.cli-proxy-api/`，权限为 600，不会离开你的机器。
 
 ---
 
