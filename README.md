@@ -24,7 +24,7 @@ This toolkit enables Factory CLI (Droid) to connect to third-party AI model prov
 ### Installation
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/cli-proxy-droid-integration.git
+git clone https://github.com/tytsxai/cli-proxy-droid-integration.git
 cd cli-proxy-droid-integration
 ./setup.sh
 ```
